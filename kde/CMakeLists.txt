@@ -38,6 +38,8 @@ if(BUILD_PLASMOID)
     add_library(codenotchplugin SHARED
         plugin/codenotchplugin.cpp
         plugin/codenotchplugin.h
+        plugin/antigravitybackend.cpp
+        plugin/antigravitybackend.h
         plugin/claudebackend.cpp
         plugin/claudebackend.h
         plugin/usagebackend.cpp
@@ -53,6 +55,7 @@ if(BUILD_PLASMOID)
         DESTINATION ${KDE_INSTALL_QMLDIR}/com/github/hivinz/codenotch)
     install(FILES
         icons/kodenotch.svg
+        icons/kodenotch-antigravity.svg
         icons/kodenotch-claude.svg
         icons/kodenotch-codex.svg
         DESTINATION ${KDE_INSTALL_ICONDIR}/hicolor/scalable/apps)
@@ -72,6 +75,8 @@ include(CTest)
 if(BUILD_TESTING)
     add_executable(usagebackendtest
         tests/usagebackendtest.cpp
+        plugin/antigravitybackend.cpp
+        plugin/antigravitybackend.h
         plugin/claudebackend.cpp
         plugin/claudebackend.h
         plugin/usagebackend.cpp

@@ -1,7 +1,7 @@
 # Kodenotch for KDE Plasma
 
-This directory contains ports for Plasma 5.27 and Plasma 6. Version 0.1 reads
-Claude Code and Codex rate limits and presents them as a panel widget.
+This directory contains ports for Plasma 5.27 and Plasma 6. It reads
+Claude Code, Codex, and Antigravity rate limits and presents them as a panel widget.
 
 ## Build and install
 
@@ -57,7 +57,7 @@ distribution should use native packages for each Linux distribution.
 
 ## Security properties
 
-- Both backends start disabled and begin work only after Plasma applies the
+- All backends start disabled and begin work only after Plasma applies the
   widget settings.
 - Disabling an integration cancels its process or network request, invalidates
   in-flight work and erases the displayed reading.
@@ -68,7 +68,10 @@ distribution should use native packages for each Linux distribution.
 - Claude credentials are accepted only from a regular, user-owned private file.
   The already-open file descriptor is checked to prevent path replacement;
   requests use a fixed HTTPS endpoint and refuse redirects.
+- Antigravity usage is queried from the local language server on loopback
+  using the CSRF token extracted from the process table, with fallback to
+  local transcript activity counting.
 
-Cursor, Antigravity and GLM are deliberately deferred until their
-actual Linux credential stores and process layouts can be verified. Guessing
-those locations would risk reading or sending the wrong credential.
+Cursor and GLM are deliberately deferred until their actual Linux credential
+stores and process layouts can be verified. Guessing those locations would
+risk reading or sending the wrong credential.

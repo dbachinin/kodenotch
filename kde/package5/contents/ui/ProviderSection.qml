@@ -20,6 +20,12 @@ ColumnLayout {
             Layout.fillWidth: true
         }
 
+        PlasmaComponents3.Label {
+            visible: root.backend && root.backend.hasReading
+            text: i18n("%1% used", root.backend ? root.backend.percent : 0)
+            opacity: 0.85
+        }
+
         PlasmaComponents3.BusyIndicator {
             running: root.backend && root.backend.busy
             visible: running

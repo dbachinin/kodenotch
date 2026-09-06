@@ -9,7 +9,8 @@ import com.github.hivinz.codenotch 1.0
 Item {
     id: root
 
-    readonly property int visibleProviderCount: (claudeBackend.enabled ? 1 : 0)
+    readonly property int visibleProviderCount: (antigravityBackend.enabled ? 1 : 0)
+                                                + (claudeBackend.enabled ? 1 : 0)
                                                 + (codexBackend.enabled ? 1 : 0)
 
     Layout.minimumWidth: Kirigami.Units.gridUnit * 18
@@ -29,6 +30,11 @@ Item {
             : i18n("%1: %2", name, backend.status)
     }
 
+    AntigravityBackend {
+        id: antigravityBackend
+        enabled: Plasmoid.configuration.antigravityEnabled
+    }
+
     ClaudeBackend {
         id: claudeBackend
         enabled: Plasmoid.configuration.claudeEnabled
@@ -42,29 +48,48 @@ Item {
     Plasmoid.title: i18n("Kodenotch")
     Plasmoid.icon: "kodenotch"
     Plasmoid.toolTipMainText: i18n("Coding assistant usage")
-    Plasmoid.toolTipSubText: providerSummary(i18n("Claude"), claudeBackend)
+    Plasmoid.toolTipSubText: providerSummary(i18n("Antigravity"), antigravityBackend)
+                              + "\n" + providerSummary(i18n("Claude"), claudeBackend)
                               + "\n" + providerSummary(i18n("Codex"), codexBackend)
 
     Plasmoid.compactRepresentation: Item {
-        implicitWidth: Kirigami.Units.gridUnit * 3
+        implicitWidth: Math.max(Kirigami.Units.gridUnit * 2,
+                                antigravityRing.visible ? antigravityRing.implicitWidth : 0,
+                                claudeRing.visible ? claudeRing.implicitWidth : 0,
+                                codexRing.visible ? codexRing.implicitWidth : 0)
         implicitHeight: Kirigami.Units.gridUnit * 2 * Math.max(1, root.visibleProviderCount)
+        // Without a width hint a horizontal panel squares the applet off and
+        // clips the legend.
+        Layout.minimumWidth: implicitWidth
+        Layout.preferredWidth: implicitWidth
 
         Column {
             anchors.fill: parent
 
             UsageRing {
-                backend: claudeBackend
-                providerIcon: "kodenotch-claude"
+                id: antigravityRing
+                backend: antigravityBackend
+                providerIcon: "kodenotch-antigravity"
+                providerName: i18n("Antigravity")
                 visible: backend.enabled
-                width: parent.width
                 height: parent.height / Math.max(1, root.visibleProviderCount)
             }
 
             UsageRing {
+                id: claudeRing
+                backend: claudeBackend
+                providerIcon: "kodenotch-claude"
+                providerName: i18n("Claude")
+                visible: backend.enabled
+                height: parent.height / Math.max(1, root.visibleProviderCount)
+            }
+
+            UsageRing {
+                id: codexRing
                 backend: codexBackend
                 providerIcon: "kodenotch-codex"
+                providerName: i18n("Codex")
                 visible: backend.enabled
-                width: parent.width
                 height: parent.height / Math.max(1, root.visibleProviderCount)
             }
         }
@@ -93,6 +118,12 @@ Item {
             anchors.fill: parent
             anchors.margins: Kirigami.Units.largeSpacing
             spacing: Kirigami.Units.largeSpacing
+
+            ProviderSection {
+                providerName: i18n("Antigravity")
+                backend: antigravityBackend
+                visible: backend.enabled
+            }
 
             ProviderSection {
                 providerName: i18n("Claude")
