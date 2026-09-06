@@ -1,5 +1,6 @@
 #pragma once
 
+#include <QByteArrayList>
 #include <QDateTime>
 #include <QList>
 #include <QNetworkAccessManager>
@@ -30,7 +31,12 @@ class AntigravityBackend : public QObject
 public:
     struct Endpoint {
         int pid = 0;
+        // Antigravity's IDE spawns `language_server --csrf_token <t>`. Its CLI
+        // and VS Code extension spawn `agy --hub --hub-port=<n>` instead and
+        // keep the token off the command line; the hub serves it to its own
+        // web UI, so it is fetched from there before the ports are probed.
         QString csrfToken;
+        int hubPort = 0;
         QList<int> ports;
 
         bool operator==(const Endpoint &other) const = default;
@@ -50,6 +56,8 @@ public:
     Q_INVOKABLE void refresh();
 
     // Public for testability
+    static std::optional<Endpoint> parseCommandLine(const QByteArrayList &args);
+    static QString hubCsrfToken(const QByteArray &page);
     static QList<int> parsePorts(const QString &lsofOutput);
     static QVariantList parseQuotaSummary(const QByteArray &data);
     static int countRequestsToday(const QString &brainDir, const QDateTime &now = QDateTime::currentDateTime());
@@ -67,6 +75,8 @@ private:
     static QString brainPath();
     static QDateTime parseDate(const QString &value);
 
+    void fetchHubToken(int port);
+    void finishHubToken();
     void probeNextPort();
     void consumeReply();
     void finishReply();

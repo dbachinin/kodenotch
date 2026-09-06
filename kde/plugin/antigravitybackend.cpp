@@ -9,6 +9,7 @@
 #include <QNetworkReply>
 #include <QNetworkRequest>
 #include <QProcess>
+#include <QRegularExpression>
 #include <QSslConfiguration>
 #include <QSslSocket>
 #include <QtMath>
@@ -88,7 +89,48 @@ void AntigravityBackend::refresh()
     m_currentCsrfToken = endpoint->csrfToken;
     m_candidatePorts = endpoint->ports;
     m_currentPortIndex = 0;
-    probeNextPort();
+    if (m_currentCsrfToken.isEmpty())
+        fetchHubToken(endpoint->hubPort);
+    else
+        probeNextPort();
+}
+
+void AntigravityBackend::fetchHubToken(int port)
+{
+    clearReply();
+    QNetworkRequest request(QUrl(QStringLiteral("http://127.0.0.1:%1/").arg(port)));
+    request.setAttribute(QNetworkRequest::RedirectPolicyAttribute, QNetworkRequest::ManualRedirectPolicy);
+    request.setTransferTimeout(10'000);
+    m_reply = m_network.get(request);
+    connect(m_reply, &QNetworkReply::finished, this, &AntigravityBackend::finishHubToken);
+}
+
+void AntigravityBackend::finishHubToken()
+{
+    if (!m_reply)
+        return;
+
+    QNetworkReply *reply = m_reply;
+    m_reply = nullptr;
+    reply->deleteLater();
+
+    if (!m_enabled) {
+        setBusy(false);
+        return;
+    }
+
+    m_currentCsrfToken = hubCsrfToken(reply->read(MaxReplyBytes));
+    if (m_currentCsrfToken.isEmpty())
+        fallbackToActivity();
+    else
+        probeNextPort();
+}
+
+QString AntigravityBackend::hubCsrfToken(const QByteArray &page)
+{
+    // The page inlines `window.__APP_CONFIG__ = {"csrfToken":"…", …}`.
+    static const QRegularExpression pattern(QStringLiteral(R"re("csrfToken"\s*:\s*"([^"]+)")re"));
+    return pattern.match(QString::fromUtf8(page)).captured(1);
 }
 
 void AntigravityBackend::probeNextPort()
@@ -289,6 +331,30 @@ QList<int> AntigravityBackend::listeningPortsOfPid(int pid)
     return parsePorts(QString::fromUtf8(lsof.readAllStandardOutput()));
 }
 
+std::optional<AntigravityBackend::Endpoint> AntigravityBackend::parseCommandLine(const QByteArrayList &args)
+{
+    if (args.isEmpty())
+        return std::nullopt;
+
+    Endpoint ep;
+    bool isServer = false;
+    for (int i = 0; i < args.size(); ++i) {
+        const QString arg = QString::fromUtf8(args[i]);
+        if (i == 0)
+            isServer = arg.contains(QStringLiteral("language_server"))
+                || (QFileInfo(arg).fileName() == QStringLiteral("agy") && args.contains(QByteArrayLiteral("--hub")));
+        else if (arg == QStringLiteral("--csrf_token") && i + 1 < args.size())
+            ep.csrfToken = QString::fromUtf8(args[i + 1]);
+        else if (arg.startsWith(QStringLiteral("--hub-port=")))
+            ep.hubPort = arg.mid(11).toInt();
+        else if (arg == QStringLiteral("--hub-port") && i + 1 < args.size())
+            ep.hubPort = args[i + 1].toInt();
+    }
+    if (!isServer || (ep.csrfToken.isEmpty() && ep.hubPort <= 0))
+        return std::nullopt;
+    return ep;
+}
+
 std::optional<AntigravityBackend::Endpoint> AntigravityBackend::discoverEndpoint(
     const std::function<QList<int>(int)> &portResolver)
 {
@@ -303,25 +369,13 @@ std::optional<AntigravityBackend::Endpoint> AntigravityBackend::discoverEndpoint
         QFile cmdlineFile(procDir.filePath(entry + QStringLiteral("/cmdline")));
         if (!cmdlineFile.open(QIODevice::ReadOnly))
             continue;
-        const QByteArrayList args = cmdlineFile.readAll().split('\0');
-
-        bool isLanguageServer = false;
-        QString csrfToken;
-        for (int i = 0; i < args.size(); ++i) {
-            const QString arg = QString::fromUtf8(args[i]);
-            if (arg.contains(QStringLiteral("language_server")))
-                isLanguageServer = true;
-            if (arg == QStringLiteral("--csrf_token") && i + 1 < args.size())
-                csrfToken = QString::fromUtf8(args[i + 1]);
-        }
-        if (!isLanguageServer || csrfToken.isEmpty())
+        auto ep = parseCommandLine(cmdlineFile.readAll().split('\0'));
+        if (!ep)
             continue;
 
-        Endpoint ep;
-        ep.pid = pid;
-        ep.csrfToken = csrfToken;
-        ep.ports = portResolver ? portResolver(pid) : listeningPortsOfPid(pid);
-        if (!ep.ports.isEmpty())
+        ep->pid = pid;
+        ep->ports = portResolver ? portResolver(pid) : listeningPortsOfPid(pid);
+        if (!ep->ports.isEmpty())
             return ep;
     }
     return std::nullopt;

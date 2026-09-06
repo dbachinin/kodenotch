@@ -195,6 +195,35 @@ done
         QCOMPARE(AntigravityBackend::parseQuotaSummary(wildFractions).size(), 0);
     }
 
+    void parsesAntigravityCommandLines()
+    {
+        const auto ide = AntigravityBackend::parseCommandLine(
+            {"/Applications/Antigravity.app/Contents/Resources/bin/language_server", "--standalone",
+             "--csrf_token", "d4bd9204-bf02-4111-b1fe-71f0d0d921d0", "--app_data_dir", "antigravity"});
+        QVERIFY(ide.has_value());
+        QCOMPARE(ide->csrfToken, QStringLiteral("d4bd9204-bf02-4111-b1fe-71f0d0d921d0"));
+        QCOMPARE(ide->hubPort, 0);
+
+        const auto cli = AntigravityBackend::parseCommandLine(
+            {"/home/u/.gemini/bin/agy", "--hub", "--hub-port=44385", "--app_data_dir=antigravity"});
+        QVERIFY(cli.has_value());
+        QVERIFY(cli->csrfToken.isEmpty());
+        QCOMPARE(cli->hubPort, 44385);
+
+        QVERIFY(!AntigravityBackend::parseCommandLine({"/home/u/.local/bin/agy", "--print", "hi"}));
+        QVERIFY(!AntigravityBackend::parseCommandLine({"/usr/bin/other", "--hub", "--hub-port=1"}));
+        QVERIFY(!AntigravityBackend::parseCommandLine({}));
+    }
+
+    void extractsHubCsrfToken()
+    {
+        const QByteArray page = QByteArrayLiteral(
+            "<html><script>window.__APP_CONFIG__ = {\"productName\":\"antigravity\","
+            "\"csrfToken\":\"d4bd9204-bf02-4111-b1fe-71f0d0d921d0\",\"devMode\":false};</script></html>");
+        QCOMPARE(AntigravityBackend::hubCsrfToken(page), QStringLiteral("d4bd9204-bf02-4111-b1fe-71f0d0d921d0"));
+        QVERIFY(AntigravityBackend::hubCsrfToken(QByteArrayLiteral("<html></html>")).isEmpty());
+    }
+
     void parsesAntigravityLsofPorts()
     {
         const QString output = QStringLiteral(
@@ -244,8 +273,8 @@ done
         AntigravityBackend backend;
         backend.setEnabled(true);
         QVERIFY(backend.enabled());
-        // Since no language server is running on the test machine, it falls back to activity
-        QVERIFY(!backend.busy());
+        // Whether a server is found depends on the machine; only the status
+        // leaving "Disabled" is guaranteed.
         QVERIFY(backend.status() != QStringLiteral("Disabled"));
 
         backend.setEnabled(false);

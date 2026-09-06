@@ -68,9 +68,11 @@ distribution should use native packages for each Linux distribution.
 - Claude credentials are accepted only from a regular, user-owned private file.
   The already-open file descriptor is checked to prevent path replacement;
   requests use a fixed HTTPS endpoint and refuse redirects.
-- Antigravity usage is queried from the local language server on loopback
-  using the CSRF token extracted from the process table, with fallback to
-  local transcript activity counting.
+- Antigravity usage is queried from the local language server on loopback.
+  The CSRF token comes from the server's command line (the IDE's
+  `language_server --csrf_token`) or from the page config served by the CLI's
+  hub (`agy --hub`, as the VS Code extension runs it). Without a server, the
+  reading falls back to counting today's requests in local transcripts.
 
 Cursor and GLM are deliberately deferred until their actual Linux credential
 stores and process layouts can be verified. Guessing those locations would
