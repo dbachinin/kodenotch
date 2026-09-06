@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<component type="addon">
+  <id>com.github.hivinz.codenotch</id>
+  <extends>org.kde.plasmashell</extends>
+  <name>Kodenotch</name>
+  <summary>Claude Code and Codex usage limits in the Plasma panel</summary>
+  <icon type="stock">kodenotch</icon>
+  <project_license>MIT</project_license>
+  <metadata_license>CC0-1.0</metadata_license>
+  <developer id="github.com/dbachinin">
+    <name>Vinz</name>
+  </developer>
+  <url type="homepage">https://github.com/dbachinin/kodenotch</url>
+</component>

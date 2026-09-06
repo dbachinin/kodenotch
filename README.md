@@ -76,6 +76,9 @@ the maintainer to cut an official release. See
 
 Run with `CODENOTCH_DEMO=1` to see fixed sample data instead of live readings.
 
+The Plasma 5.27/6 port lives in [`kde/`](kde/README.md). Its first version is a
+panel widget for Claude Code and Codex usage limits.
+
 ## Architecture
 
 Every provider implements `UsageProvider` (`Sources/Providers/`) and declares

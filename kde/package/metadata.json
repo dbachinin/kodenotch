@@ -1,0 +1,14 @@
+{
+    "KPackageStructure": "Plasma/Applet",
+    "KPlugin": {
+        "Id": "com.github.hivinz.codenotch",
+        "Name": "Kodenotch",
+        "Description": "Claude Code and Codex usage limits in the Plasma panel",
+        "Icon": "kodenotch",
+        "Version": "0.1.0",
+        "License": "MIT",
+        "Website": "https://github.com/dbachinin/kodenotch",
+        "Category": "System Information"
+    },
+    "X-Plasma-API-Minimum-Version": "6.0"
+}

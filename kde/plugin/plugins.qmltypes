@@ -1,0 +1,49 @@
+import QtQuick.tooling 1.2
+
+Module {
+    Component {
+        name: "ClaudeBackend"
+        prototype: "QObject"
+        exports: ["com.github.hivinz.codenotch/ClaudeBackend 1.0"]
+        exportMetaObjectRevisions: [256]
+
+        Property { name: "enabled"; type: "bool"; read: "enabled"; write: "setEnabled"; notify: "enabledChanged" }
+        Property { name: "busy"; type: "bool"; read: "busy"; notify: "busyChanged" }
+        Property { name: "hasReading"; type: "bool"; read: "hasReading"; notify: "readingChanged" }
+        Property { name: "percent"; type: "int"; read: "percent"; notify: "readingChanged" }
+        Property { name: "status"; type: "QString"; read: "status"; notify: "statusChanged" }
+        Property { name: "windows"; type: "QVariantList"; read: "windows"; notify: "readingChanged" }
+
+        Signal { name: "enabledChanged" }
+        Signal { name: "busyChanged" }
+        Signal { name: "readingChanged" }
+        Signal { name: "statusChanged" }
+        Method { name: "refresh" }
+    }
+
+    Component {
+        name: "UsageBackend"
+        prototype: "QObject"
+        exports: ["com.github.hivinz.codenotch/UsageBackend 1.0"]
+        exportMetaObjectRevisions: [256]
+
+        Property {
+            name: "enabled"
+            type: "bool"
+            read: "enabled"
+            write: "setEnabled"
+            notify: "enabledChanged"
+        }
+        Property { name: "busy"; type: "bool"; read: "busy"; notify: "busyChanged" }
+        Property { name: "hasReading"; type: "bool"; read: "hasReading"; notify: "readingChanged" }
+        Property { name: "percent"; type: "int"; read: "percent"; notify: "readingChanged" }
+        Property { name: "status"; type: "QString"; read: "status"; notify: "statusChanged" }
+        Property { name: "windows"; type: "QVariantList"; read: "windows"; notify: "readingChanged" }
+
+        Signal { name: "enabledChanged" }
+        Signal { name: "busyChanged" }
+        Signal { name: "readingChanged" }
+        Signal { name: "statusChanged" }
+        Method { name: "refresh" }
+    }
+}
